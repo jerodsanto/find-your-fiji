@@ -1,8 +1,143 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Find Your Fiji! What is exactly half way around the world from me?</title>
+  <title>Find Your Fiji | What is exactly half way around the world from me?</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link href='http://fonts.googleapis.com/css?family=Gloria+Hallelujah' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" type="text/css" href="/assets/modal.css">
+  <style type="text/css">
+  body {
+    background-image: url(/assets/fiji-bg.png);
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: cover;
+    background-color: #464646;
+    color: white;
+  }
+  #wrap {
+    text-align: center;
+  }
+  #content {
+    max-width: 350px;
+    margin: 0 auto;
+  }
+  h1 {
+    font-size: 56px;
+    font-family: Gloria Hallelujah, cursive;
+    color: #ff6600;
+  }
+  p {
+    font-family: Helvetica Neue, Helvetica, sans-serif;
+    font-size: 18px;
+    line-height: 25px;
+    text-align: justify;
+    padding: 0 5px;
+  }
+  a, a:hover, a:visited {
+    color: white;
+  }
+  #find {
+    background: #ff6600;
+    color: white;
+    font-family: Helvetica Neue, Helvetica, sans-serif;
+    font-size: 20px;
+    width: 60%;
+    margin: 15px 20%;
+    padding: 10px;
+    border: none;
+    cursor: pointer;
+  }
+  #credit {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: #000;
+    color: #fff;
+    padding: 3px 5px 2px;
+    font-size: 12px;
+  }
+  </style>
 </head>
 <body>
+  <div id="content">
+    <h1>Find Your Fiji</h1>
+    <section class="about">
+      <p>Ever wonder what is <em>exactly</em> half way around the world from you?</p>
+      <p>According to <a id="truman" href="javascript:void(0);">Truman Burbank</a>, Fiji is the furthest away you can travel before you start coming back.</p>
+      <p>What's <em>your</em> Fiji?</p>
+    </section>
+
+    <button id="find">Find Out!</button>
+    <audio id="show" preload="auto">
+      <source src="/assets/fiji.mp3">
+      <source src="/assets/fiji.ogg">
+    </audio>
+  </div>
+
+  <div id="credit">
+    An <a href="http://objectlateral.com">Object Lateral</a> joint
+  </div>
+
+  <div class="modal" id="unsupported">
+    <div class="modal-header">
+      <a class="close" href="javascript:void(0);" onclick="hide('unsupported');">X</a>
+      <h1>Unsupported Browser :(</h1>
+    </div>
+    <div class="modal-body">
+      <div class="contents">
+        <p>Find Your Fiji requires a browser that supports the <a href="http://dev.w3.org/geo/api/spec-source.html">Geolocation API</a>. Sadly, your does not.</p>
+        <p>It'd be cool if you could type in an address manually, but alas, I hacked this together in < 48 hours for <a href="http://2015.staticshowdown.com">a competition</a>. That feature didn't make the cut.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <a class="btn primary" href="javascript:void(0);" onclick="hide('unsupported');">Ok Then</a>
+    </div>
+  </div>
+
+  <div class="modal" id="noaccess">
+    <div class="modal-header">
+      <a class="close" href="javascript:void(0);" onclick="hide('noaccess');">X</a>
+      <h1>Geolocation Required :(</h1>
+    </div>
+    <div class="modal-body">
+      <div class="contents">
+        <p>Sorry, but I cannot Find Your Fiji if you will not give me access to your current location. Please try again and select "Allow" when prompted.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <a class="btn primary" href="javascript:void(0);" onclick="hide('noaccess');">Makes Sense</a>
+    </div>
+  </div>
+
+  <script>
+  function show(id) {
+    document.getElementById(id).style.display = "block";
+  }
+
+  function hide(id) {
+    document.getElementById(id).style.display = 'none'
+  }
+
+  document.getElementById("truman").onclick = function(event) {
+    event.preventDefault();
+    var audio = document.getElementById("show");
+    audio.play();
+  };
+
+  document.getElementById("find").onclick = function(event) {
+    event.preventDefault();
+
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        window.location = "/find/#/" + position.coords.latitude +"," + position.coords.longitude;
+      }, function(error) {
+        show("noaccess");
+      });
+    } else {
+      show("unsupported");
+    }
+  }
+  </script>
 </body>
 </html>
