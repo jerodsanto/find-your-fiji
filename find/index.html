@@ -100,9 +100,7 @@
   var latLngList = location.hash.replace("#/", "").split(",");
   var lat = parseFloat(latLngList[0], 10);
   var lng = parseFloat(latLngList[1], 10);
-  var northern = 0 < lat ? true : false;
 
-  // console.log(lat, lng, northern);
   function go() {
     var layer = "watercolor";
     var bounds = new google.maps.LatLngBounds();
@@ -122,7 +120,7 @@
       zoom: 2,
       mapTypeId: layer,
       tilt: 0,
-      // draggable: false,
+      draggable: false,
       scrollwheel: false,
       scaleControl: false,
       streetViewControl: false,
@@ -140,7 +138,7 @@
     new google.maps.Marker({
       map: map,
       position:  startLL,
-      icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
+      icon: "/assets/you.png"
     });
 
     function detectWater(ll) {
@@ -214,7 +212,7 @@
       new google.maps.Marker({
         map: map,
         position:  ll,
-        icon: 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png'
+        icon: "/assets/fiji.png"
       });
 
       new google.maps.Geocoder().geocode({"latLng": ll}, function(results, status) {
@@ -232,7 +230,7 @@
             if (country) {
               country = country.long_name;
             }
-            alert(city + ", " + country);
+            // alert(city + ", " + country);
           } else {
             alert("Nowheresville");
           }
@@ -263,11 +261,10 @@
         if (endLL.isLand) {
           fiji(endLL);
         } else {
-          // heading north|south!
           new google.maps.Marker({
             map: map,
             position:  endLL,
-            icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+            icon: "/assets/water.png"
           });
 
           var actualEndLL = endCandidates.find(function(c) { return c.isLand; });
