@@ -38,12 +38,18 @@
     </div>
     <div class="modal-body">
       <div class="contents">
-        <p>Looks like "<span id="location"></span>" is half way around the world from you!</p>
+        <p>Looks like "<em><span id="location"></span></em>" is half way around the world from you!</p>
+        <p>(Change the coordinates in the address bar to try from different locations.)</p>
       </div>
     </div>
     <div class="modal-footer" id="share">
     </div>
   </div>
+
+  <audio id="truman" preload="auto">
+    <source src="/assets/fiji.mp3">
+    <source src="/assets/fiji.ogg">
+  </audio>
 
   <script>
   window.twttr=(function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],t=window.twttr||{};if(d.getElementById(id))return;js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);t._e=[];t.ready=function(f){t._e.push(f);};return t;}(document,"script","twitter-wjs"));
@@ -305,6 +311,7 @@
         tweetButton.setAttribute("data-related", "jerodsanto");
         document.getElementById("share").appendChild(tweetButton);
         twttr.widgets.load();
+        document.getElementById("truman").play();
         show("your-fiji");
       });
     }
