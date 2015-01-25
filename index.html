@@ -6,6 +6,10 @@
   <link href='http://fonts.googleapis.com/css?family=Gloria+Hallelujah' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" type="text/css" href="/assets/modal.css">
   <style type="text/css">
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
   body {
     background-image: url(/assets/fiji-bg.png);
     background-position: center center;
@@ -50,12 +54,10 @@
   }
   #credit {
     position: absolute;
-    bottom: 0;
+    bottom: 5px;
     right: 0;
-    background: #000;
-    color: #fff;
-    padding: 3px 5px 2px;
-    font-size: 12px;
+    width: 64px;
+    height: 64px;
   }
   </style>
 </head>
@@ -75,9 +77,9 @@
     </audio>
   </div>
 
-  <div id="credit">
-    An <a href="http://objectlateral.com">Object Lateral</a> joint
-  </div>
+  <a id="credit" href="javascript:void(0);" onclick="show('about');" title="Built by Jerod Santo">
+    <img src="/assets/jms.png" width="64" height="64" alt="Built by Jerod Santo">
+  </a>
 
   <div class="modal" id="unsupported">
     <div class="modal-header">
@@ -110,13 +112,30 @@
     </div>
   </div>
 
+  <div class="modal" id="about">
+    <div class="modal-header">
+      <a class="close" href="javascript:void(0);" onclick="hide('about');">X</a>
+      <h1>About</h1>
+    </div>
+    <div class="modal-body">
+      <div class="contents">
+        <p>Built by <a href="http://jerodsanto.net">Jerod Santo</a> for <a href="http://2015.staticshowdown.com/">Static Showdown</a>
+        using the Google Maps API and vanilla JS. </p><p>Map tiles courtesy <a href="http://stamen.com">Stamen Design</a> (<a href="http://creativecommons.org/licenses/by/3.0">CC 3.0</a>).</p>
+        <p>Holler at me on <a href="https://twitter.com/jerodsanto">Twitter</a> or by <a href="mailto:jerod.santo@gmail.com">Email</a>.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <a class="btn primary" href="javascript:void(0);" onclick="hide('about');">Close</a>
+    </div>
+  </div>
+
   <script>
   function show(id) {
     document.getElementById(id).style.display = "block";
   }
 
   function hide(id) {
-    document.getElementById(id).style.display = 'none'
+    document.getElementById(id).style.display = "none";
   }
 
   document.getElementById("truman").onclick = function(event) {

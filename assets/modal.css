@@ -66,8 +66,9 @@
   text-align: left !important;
 }
 .modal .modal-body p img {
-  display: block;
-  margin: 0 auto 10px auto;
+  float: right;
+  margin-top: 18px;
+  margin-right: 3px;
 }
 .modal p a, a:hover, a:visited {
   color: black;

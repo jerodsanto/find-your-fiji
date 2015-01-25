@@ -1,21 +1,65 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Find Your Fiji! What is exactly half way around the world from me?</title>
+  <title>Find Your Fiji | What is exactly half way around the world from me?</title>
+  <link rel="stylesheet" type="text/css" href="/assets/modal.css">
   <style type="text/css">
     html, body, #map { height: 100%; margin: 0; padding: 0; }
-    #credit { position: absolute; bottom: 0; right: 0; background: #000; color: #fff; padding: 3px 5px 2px; font-size: 12px; }
-    #credit a, #credit a:hover, #credit a:visited { color: white; }
+    #credit { position: absolute; bottom: 5px; right: 0; width: 64px; height: 64px; }
   </style>
 </head>
 <body>
   <div id="map"></div>
-  <div id="credit">
-    Map tiles by <a href="http://stamen.com">Stamen Design</a> (<a href="http://creativecommons.org/licenses/by/3.0">CC 3.0</a>)
+  <a id="credit" href="javascript:void(0);" onclick="show('about');" title="Built by Jerod Santo">
+    <img src="/assets/jms.png" width="64" height="64" alt="Built by Jerod Santo">
+  </a>
+
+  <div class="modal" id="about">
+    <div class="modal-header">
+      <a class="close" href="javascript:void(0);" onclick="hide('about');">X</a>
+      <h1>About</h1>
+    </div>
+    <div class="modal-body">
+      <div class="contents">
+        <p>Built by <a href="http://jerodsanto.net">Jerod Santo</a> for <a href="http://2015.staticshowdown.com/">Static Showdown</a>
+        using the Google Maps API and vanilla JS. </p><p>Map tiles courtesy <a href="http://stamen.com">Stamen Design</a> (<a href="http://creativecommons.org/licenses/by/3.0">CC 3.0</a>).</p>
+        <p>Holler at me on <a href="https://twitter.com/jerodsanto">Twitter</a> or by <a href="mailto:jerod.santo@gmail.com">Email</a>.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <a class="btn primary" href="javascript:void(0);" onclick="hide('about');">Close</a>
+    </div>
   </div>
+
+  <div class="modal" id="your-fiji">
+    <div class="modal-header">
+      <a class="close" href="javascript:void(0);" onclick="hide('your-fiji');">X</a>
+      <h1>Found Your Fiji!</h1>
+    </div>
+    <div class="modal-body">
+      <div class="contents">
+        <p>Looks like "<span id="location"></span>" is half way around the world from you!</p>
+      </div>
+    </div>
+    <div class="modal-footer" id="share">
+    </div>
+  </div>
+
+  <script>
+  window.twttr=(function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],t=window.twttr||{};if(d.getElementById(id))return;js=d.createElement(s);js.id=id;js.src="https://platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);t._e=[];t.ready=function(f){t._e.push(f);};return t;}(document,"script","twitter-wjs"));
+  </script>
   <script src="//maps.googleapis.com/maps/api/js?key=AIzaSyDqw0UXEFyQyY3a9nLFZl5wwHZ-jKPuMjw"></script>
   <script src="//maps.stamen.com/js/tile.stamen.js?v1.3.0"></script>
   <script>
+  Array.prototype.clean = function(deleteValue) {
+    for (var i = 0; i < this.length; i++) {
+      if (this[i] == deleteValue) {
+        this.splice(i, 1);
+        i--;
+      }
+    }
+    return this;
+  };
   if (!Array.prototype.find) {
     Array.prototype.find = function(predicate) {
       if (this == null) {
@@ -70,6 +114,14 @@
 
   Math.degrees = function(radians) {
     return radians * 180 / Math.PI;
+  };
+
+  function show(id) {
+    document.getElementById(id).style.display = "block";
+  };
+
+  function hide(id) {
+    document.getElementById(id).style.display = "none";
   };
 
   function latDue(bearing, lat, distance) {
@@ -216,6 +268,9 @@
       });
 
       new google.maps.Geocoder().geocode({"latLng": ll}, function(results, status) {
+        var unknowns = ["Nowheresville", "The Middle of Nowhere", "BFE", "The Boonies", "Somewhere Google won't dare travel"];
+        var locationString;
+
         if (status == google.maps.GeocoderStatus.OK) {
           if (results.length) {
             var components = results[0].address_components;
@@ -230,13 +285,27 @@
             if (country) {
               country = country.long_name;
             }
-            // alert(city + ", " + country);
+
+            locationString = [city, country].clean().join(", ");
           } else {
-            alert("Nowheresville");
+            locationString = unknowns[Math.floor(Math.random()*unknowns.length)];
           }
         } else {
-          alert("Nowheresville");
+          locationString = unknowns[Math.floor(Math.random()*unknowns.length)];
         }
+
+        document.getElementById("location").innerText = locationString;
+        var tweetButton = document.createElement("a");
+        tweetButton.innerText = "Tell Your Friends!";
+        tweetButton.href = "https://twitter.com/share";
+        tweetButton.setAttribute("class", "twitter-share-button");
+        tweetButton.setAttribute("data-url", "");
+        tweetButton.setAttribute("data-text", "I'm exactly half way around the world from " + locationString + "! #FindYourFiji");
+        tweetButton.setAttribute("data-count", "none");
+        tweetButton.setAttribute("data-related", "jerodsanto");
+        document.getElementById("share").appendChild(tweetButton);
+        twttr.widgets.load();
+        show("your-fiji");
       });
     }
 
