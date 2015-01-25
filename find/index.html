@@ -16,6 +16,54 @@
   <script src="//maps.googleapis.com/maps/api/js?key=AIzaSyDqw0UXEFyQyY3a9nLFZl5wwHZ-jKPuMjw"></script>
   <script src="//maps.stamen.com/js/tile.stamen.js?v1.3.0"></script>
   <script>
+  if (!Array.prototype.find) {
+    Array.prototype.find = function(predicate) {
+      if (this == null) {
+        throw new TypeError('Array.prototype.find called on null or undefined');
+      }
+      if (typeof predicate !== 'function') {
+        throw new TypeError('predicate must be a function');
+      }
+      var list = Object(this);
+      var length = list.length >>> 0;
+      var thisArg = arguments[1];
+      var value;
+
+      for (var i = 0; i < length; i++) {
+        value = list[i];
+        if (predicate.call(thisArg, value, i, list)) {
+          return value;
+        }
+      }
+      return undefined;
+    };
+  };
+  if (!Array.prototype.some) {
+    Array.prototype.some = function(fun /*, thisArg*/) {
+      'use strict';
+
+      if (this == null) {
+        throw new TypeError('Array.prototype.some called on null or undefined');
+      }
+
+      if (typeof fun !== 'function') {
+        throw new TypeError();
+      }
+
+      var t = Object(this);
+      var len = t.length >>> 0;
+
+      var thisArg = arguments.length >= 2 ? arguments[1] : void 0;
+      for (var i = 0; i < len; i++) {
+        if (i in t && fun.call(thisArg, t[i], i, t)) {
+          return true;
+        }
+      }
+
+      return false;
+    };
+  };
+
   Math.radians = function(degrees) {
     return degrees * Math.PI / 180;
   };
@@ -34,10 +82,9 @@
     return Math.degrees(lat2);
   }
 
-  function lngDueEast(lng, distance) {
-    var bearing = 90;     // due east
-    var radius = 6371;    // earth's radius in km
-    var lat1 = 0;           // assume we're at the equator
+  function lngDue(bearing, lng, distance) {
+    var radius = 6371;
+    var lat1 = 0; // assume we're at the equator
 
     var lng1 = Math.radians(lng);
 
@@ -46,7 +93,7 @@
     var lng2 = lng1 + Math.atan2(Math.sin(bearing)*Math.sin(distance/radius)
       *Math.cos(lat1), Math.cos(distance/radius)-Math.sin(lat1)*Math.sin(lat2));
 
-    console.log("lat1", lat1, "lat2", lat2, "lon1", lng1, "lon2", lng2);
+    // console.log("lat1", lat1, "lat2", lat2, "lon1", lng1, "lon2", lng2);
     return Math.degrees(lng2);
   };
 
@@ -54,18 +101,15 @@
   var lat = parseFloat(latLngList[0], 10);
   var lng = parseFloat(latLngList[1], 10);
   var northern = 0 < lat ? true : false;
-  var endCandidates = [];
 
-  console.log(lat, lng, northern);
-  var map, start, end, line, endInterval;
-
-  function init() {
+  // console.log(lat, lng, northern);
+  function go() {
     var layer = "watercolor";
     var bounds = new google.maps.LatLngBounds();
     var startLL = new google.maps.LatLng(lat, lng);
-    var equatorLL = new google.maps.LatLng(0, lng);
-    var halfwayLL = new google.maps.LatLng(0, lngDueEast(lng, 10019));
-    var endLL = new google.maps.LatLng(-lat, lngDueEast(lng, 20038));
+    var halfwayLL = new google.maps.LatLng(0, lngDue(90, lng, 10019));
+    var endLL = new google.maps.LatLng(-lat, lngDue(90, lng, 20038));
+    var endCandidates = [];
     detectWater(endLL);
     endCandidates.push(endLL);
 
@@ -73,7 +117,7 @@
     bounds.extend(halfwayLL);
     bounds.extend(endLL);
 
-    map = new google.maps.Map(document.getElementById("map"), {
+    var map = new google.maps.Map(document.getElementById("map"), {
       center: halfwayLL,
       zoom: 2,
       mapTypeId: layer,
@@ -93,7 +137,7 @@
     map.mapTypes.set(layer, new google.maps.StamenMapType(layer));
     map.fitBounds(bounds);
 
-    start = new google.maps.Marker({
+    new google.maps.Marker({
       map: map,
       position:  startLL,
       icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
@@ -102,7 +146,7 @@
     function detectWater(ll) {
       var water = new Image();
       water.crossOrigin = "http://maps.googleapis.com/crossdomain.xml";
-      water.src = "http://maps.googleapis.com/maps/api/staticmap?center=" + ll.toUrlValue() + "&zoom=13&size=100x100&sensor=false&visual_refresh=true&style=element:labels|visibility:off&style=feature:water|color:0x00FF00&style=feature:transit|visibility:off&style=feature:poi|visibility:off&style=feature:road|visibility:off&style=feature:administrative|visibility:off";
+      water.src = "http://maps.googleapis.com/maps/api/staticmap?&key=AIzaSyDqw0UXEFyQyY3a9nLFZl5wwHZ-jKPuMjw&center=" + ll.toUrlValue() + "&zoom=13&size=100x100&sensor=false&visual_refresh=true&style=element:labels|visibility:off&style=feature:water|color:0x00FF00&style=feature:transit|visibility:off&style=feature:poi|visibility:off&style=feature:road|visibility:off&style=feature:administrative|visibility:off";
 
       var waterCanvas = document.createElement("canvas");
       waterCanvas.setAttribute("width", 100);
@@ -115,7 +159,7 @@
         var waterColorBytes = [0, 254, 0];
         var ourColorBytes = [bytes[0], bytes[1], bytes[2]];
 
-        console.log(bytes);
+        console.log(ll.toUrlValue(), bytes);
 
         if (bytes[1] === 254) {
           ll.isLand = false;
@@ -164,32 +208,60 @@
           }
         }
       }, 10);
+    };
+
+    function fiji(ll) {
+      new google.maps.Marker({
+        map: map,
+        position:  ll,
+        icon: 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png'
+      });
+
+      new google.maps.Geocoder().geocode({"latLng": ll}, function(results, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+          if (results.length) {
+            var components = results[0].address_components;
+            var city = components.find(function(c) { return c.types[0] == "locality" });
+
+            if (city) {
+              city = city.long_name;
+            }
+
+            var country = components.find(function(c) { return c.types[0] == "country" });
+
+            if (country) {
+              country = country.long_name;
+            }
+            alert(city + ", " + country);
+          } else {
+            alert("Nowheresville");
+          }
+        } else {
+          alert("Nowheresville");
+        }
+      });
     }
 
-    endInterval = setInterval(function() {
-      var lastEndPoint = endCandidates[endCandidates.length - 1];
-
-      if (!lastEndPoint.isLand) {
-        var nextLat = latDue(0, lastEndPoint.lat(), 250);
-        var nextPoint = new google.maps.LatLng(nextLat, lastEndPoint.lng());
-        console.log("pushing new end point!", nextPoint);
-        detectWater(nextPoint);
-        endCandidates.push(nextPoint);
+    var interval = setInterval(function() {
+      if (endCandidates.some(function(c) { return c.isLand })) {
+        clearInterval(interval);
       } else {
-        clearInterval(endInterval);
-      }
-    }, 500);
+        var lastEndPoint = endCandidates[endCandidates.length - 1];
+        var nextLat = latDue(0, lastEndPoint.lat(), 500);
+        var nextPoint = new google.maps.LatLng(nextLat, lastEndPoint.lng());
 
-    currentEndPoint = endLL;
+        detectWater(nextPoint);
+        bounds.extend(nextPoint);
+        map.fitBounds(bounds);
+
+        endCandidates.push(nextPoint);
+      }
+    }, 250);
 
     animateLine(startLL, halfwayLL, function() {
       animateLine(halfwayLL, endLL, function() {
         if (endLL.isLand) {
-          new google.maps.Marker({
-            map: map,
-            position:  endLL,
-            icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
-          });
+          fiji(endLL);
         } else {
           // heading north|south!
           new google.maps.Marker({
@@ -198,21 +270,17 @@
             icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
           });
 
-          var actualEndLL = endCandidates[endCandidates.length - 1];
+          var actualEndLL = endCandidates.find(function(c) { return c.isLand; });
 
           animateLine(endLL, actualEndLL, function() {
-            new google.maps.Marker({
-              map: map,
-              position:  actualEndLL,
-              icon: 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png'
-            });
+            fiji(actualEndLL);
           })
         }
       });
     });
   }
 
-  google.maps.event.addDomListener(window, "load", init);
+  google.maps.event.addDomListener(window, "load", go);
   </script>
 </body>
 </html>
