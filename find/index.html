@@ -152,7 +152,6 @@
     var lng2 = lng1 + Math.atan2(Math.sin(bearing)*Math.sin(distance/radius)
       *Math.cos(lat1), Math.cos(distance/radius)-Math.sin(lat1)*Math.sin(lat2));
 
-    // console.log("lat1", lat1, "lat2", lat2, "lon1", lng1, "lon2", lng2);
     return Math.degrees(lng2);
   };
 
@@ -215,8 +214,6 @@
         var bytes = waterCanvas.getImageData(50, 50, 1, 1).data;
         var waterColorBytes = [0, 254, 0];
         var ourColorBytes = [bytes[0], bytes[1], bytes[2]];
-
-        console.log(ll.toUrlValue(), bytes);
 
         if (bytes[1] === 254) {
           ll.isLand = false;
@@ -301,9 +298,9 @@
           locationString = unknowns[Math.floor(Math.random()*unknowns.length)];
         }
 
-        document.getElementById("location").innerText = locationString;
+        document.getElementById("location").innerHTML = locationString;
         var tweetButton = document.createElement("a");
-        tweetButton.innerText = "Tell Your Friends!";
+        tweetButton.innerHTML = "Tell Your Friends!";
         tweetButton.href = "https://twitter.com/share";
         tweetButton.setAttribute("class", "twitter-share-button");
         tweetButton.setAttribute("data-url", "");
