@@ -24,6 +24,16 @@
     return radians * 180 / Math.PI;
   };
 
+  function latDue(bearing, lat, distance) {
+    var radius = 6371;
+    var lat1 = Math.radians(lat);
+
+    var lat2 = Math.asin(Math.sin(lat1)*Math.cos(distance/radius) +
+      Math.cos(lat1)*Math.sin(distance/radius)*Math.cos(bearing));
+
+    return Math.degrees(lat2);
+  }
+
   function lngDueEast(lng, distance) {
     var bearing = 90;     // due east
     var radius = 6371;    // earth's radius in km
@@ -38,15 +48,16 @@
 
     console.log("lat1", lat1, "lat2", lat2, "lon1", lng1, "lon2", lng2);
     return Math.degrees(lng2);
-  }
+  };
 
   var latLngList = location.hash.replace("#/", "").split(",");
   var lat = parseFloat(latLngList[0], 10);
   var lng = parseFloat(latLngList[1], 10);
   var northern = 0 < lat ? true : false;
+  var endCandidates = [];
 
   console.log(lat, lng, northern);
-  var map, start, end, line;
+  var map, start, end, line, endInterval;
 
   function init() {
     var layer = "watercolor";
@@ -55,6 +66,8 @@
     var equatorLL = new google.maps.LatLng(0, lng);
     var halfwayLL = new google.maps.LatLng(0, lngDueEast(lng, 10019));
     var endLL = new google.maps.LatLng(-lat, lngDueEast(lng, 20038));
+    detectWater(endLL);
+    endCandidates.push(endLL);
 
     bounds.extend(startLL);
     bounds.extend(halfwayLL);
@@ -86,6 +99,32 @@
       icon: 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png'
     });
 
+    function detectWater(ll) {
+      var water = new Image();
+      water.crossOrigin = "http://maps.googleapis.com/crossdomain.xml";
+      water.src = "http://maps.googleapis.com/maps/api/staticmap?center=" + ll.toUrlValue() + "&zoom=13&size=100x100&sensor=false&visual_refresh=true&style=element:labels|visibility:off&style=feature:water|color:0x00FF00&style=feature:transit|visibility:off&style=feature:poi|visibility:off&style=feature:road|visibility:off&style=feature:administrative|visibility:off";
+
+      var waterCanvas = document.createElement("canvas");
+      waterCanvas.setAttribute("width", 100);
+      waterCanvas.setAttribute("height", 100);
+      waterCanvas = waterCanvas.getContext("2d");
+
+      water.onload = function() {
+        waterCanvas.drawImage(water, 0, 0, 100, 100);
+        var bytes = waterCanvas.getImageData(50, 50, 1, 1).data;
+        var waterColorBytes = [0, 254, 0];
+        var ourColorBytes = [bytes[0], bytes[1], bytes[2]];
+
+        console.log(bytes);
+
+        if (bytes[1] === 254) {
+          ll.isLand = false;
+        } else {
+          ll.isLand = true;
+        }
+      }
+    };
+
     function animateLine(from, to, cb) {
       var step = 0;
       var numSteps = 250;
@@ -111,6 +150,10 @@
         step += 1;
 
         if (step < numSteps) {
+          if (!google.maps.geometry) {
+            return;
+          }
+
           var soFar = google.maps.geometry.spherical.interpolate(from, to, step / numSteps);
           line.setPath([from, soFar]);
         } else {
@@ -123,13 +166,48 @@
       }, 10);
     }
 
+    endInterval = setInterval(function() {
+      var lastEndPoint = endCandidates[endCandidates.length - 1];
+
+      if (!lastEndPoint.isLand) {
+        var nextLat = latDue(0, lastEndPoint.lat(), 250);
+        var nextPoint = new google.maps.LatLng(nextLat, lastEndPoint.lng());
+        console.log("pushing new end point!", nextPoint);
+        detectWater(nextPoint);
+        endCandidates.push(nextPoint);
+      } else {
+        clearInterval(endInterval);
+      }
+    }, 500);
+
+    currentEndPoint = endLL;
+
     animateLine(startLL, halfwayLL, function() {
       animateLine(halfwayLL, endLL, function() {
-        new google.maps.Marker({
-          map: map,
-          position:  endLL,
-          icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
-        });
+        if (endLL.isLand) {
+          new google.maps.Marker({
+            map: map,
+            position:  endLL,
+            icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+          });
+        } else {
+          // heading north|south!
+          new google.maps.Marker({
+            map: map,
+            position:  endLL,
+            icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+          });
+
+          var actualEndLL = endCandidates[endCandidates.length - 1];
+
+          animateLine(endLL, actualEndLL, function() {
+            new google.maps.Marker({
+              map: map,
+              position:  actualEndLL,
+              icon: 'http://maps.google.com/mapfiles/ms/icons/yellow-dot.png'
+            });
+          })
+        }
       });
     });
   }
